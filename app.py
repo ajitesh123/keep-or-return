@@ -1,11 +1,12 @@
 # Import the necessary libraries
-import gradio as gr
+import streamlit as st
 import openai
 import base64
 from PIL import Image
 import io
 import requests
 import os
+import concurrent.futures
 
 # Consider using environment variables or a configuration file for API keys.
 # WARNING: Do not hardcode API keys in your code, especially if sharing or using version control.
@@ -26,7 +27,7 @@ def ask_openai_with_image(image):
     base64_image = encode_image_to_base64(image)
     
     # Create the payload with the base64 encoded image
-    payload = {
+    outfit_advice_payload = {
         "model": "gpt-4-vision-preview",
         "messages": [
             {
@@ -34,7 +35,26 @@ def ask_openai_with_image(image):
                 "content": [
                     {
                         "type": "text",
-                        "text": "I've uploaded an image and I'd like to know what it depicts and any interesting details you can provide."
+                        "text": "Based on color theory, texture, and material, suggest whether the outfit is a keep or a return."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": f"data:image/jpeg;base64,{base
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 4095
+    }
+    mom_advice_payload = {
+        "model": "gpt-4-vision-preview",
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Act as my mother and give a suggestion on whether to keep or return this outfit, taking emotion into account."
                     },
                     {
                         "type": "image_url",
@@ -45,6 +65,8 @@ def ask_openai_with_image(image):
         ],
         "max_tokens": 4095
     }
+    responses = parallel_request([outfit_advice_payload, mom_advice_payload])
+    return responses
     
     # Send the request to the OpenAI API
     response = requests.post(
@@ -54,7 +76,7 @@ def ask_openai_with_image(image):
     )
     
     # Check if the request was successful
-    if response.status_code == 200:
+    if response.status
         response_json = response.json()
         print("Response JSON:", response_json)  # Print the raw response JSON
         try:
@@ -70,13 +92,16 @@ def ask_openai_with_image(image):
         return f"Error: {response.text}"
 
 # Create a Gradio interface
-iface = gr.Interface(
-    fn=ask_openai_with_image,
-    inputs=gr.Image(type="pil"),
-    outputs="text",
-    title="GPT-4 with Vision",
-    description="Upload an image and get a description from GPT-4 with Vision."
-)
+def main():
+    st.title("AI Fashion Advisor")
+    image = st.file_uploader("Upload an image of the outfit", type=["jpg", "png"])
+    if image:
+        image = Image.open(image)
+        responses = ask_openai_with_image(image)
+        st.write("AI's Outfit Advice:", responses[0])
+        st.write("Mom's Advice:", responses[1])
+if __name__ == "__main__":
+    main()
 
 # Launch the app
 iface.launch()

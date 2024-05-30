@@ -1,5 +1,7 @@
 # Import the necessary libraries
-import gradio as gr
+import streamlit as st
+import asyncio
+from typing import Tuple
 import openai
 import base64
 from PIL import Image
@@ -21,28 +23,14 @@ def encode_image_to_base64(image):
     return img_str
 
 # Function to send the image to the OpenAI API and get a response
-def ask_openai_with_image(image):
+def ask_openai_with_image_and_prompt(image: Image, prompt: str) -> str:
     # Encode the uploaded image to base64
     base64_image = encode_image_to_base64(image)
     
     # Create the payload with the base64 encoded image
     payload = {
         "model": "gpt-4-vision-preview",
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "I've uploaded an image and I'd like to know what it depicts and any interesting details you can provide."
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                ]
-            }
-        ],
+        "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"}]}],
         "max_tokens": 4095
     }
     
@@ -70,13 +58,26 @@ def ask_openai_with_image(image):
         return f"Error: {response.text}"
 
 # Create a Gradio interface
-iface = gr.Interface(
-    fn=ask_openai_with_image,
-    inputs=gr.Image(type="pil"),
-    outputs="text",
-    title="GPT-4 with Vision",
-    description="Upload an image and get a description from GPT-4 with Vision."
-)
+def main():
+    st.title("Outfit Rating App")
+    uploaded_image = st.file_uploader("Upload an image of your outfit", type=["png", "jpg", "jpeg"])
 
 # Launch the app
-iface.launch()
+    if uploaded_image is not None:
+        image = Image.open(uploaded_image)
+        stylist_result, mother_result = asyncio.run(make_dual_ai_calls(image))
+        st.write("Fashion Stylist's Verdict:", stylist_result)
+        st.write("Mother's Verdict:", mother_result)
+
+if __name__ == "__main__":
+    main()
+async def make_dual_ai_calls(image: Image) -> Tuple[str, str]:
+    stylist_prompt = "Act as a fashion stylist and rate this outfit based on color theory, material, texture etc."
+    mother_prompt = "Act as my mother and give your verdict on this outfit, considering emotions."
+
+    stylist_task = asyncio.create_task(ask_openai_with_image_and_prompt(image, stylist_prompt))
+    mother_task = asyncio.create_task(ask_openai_with_image_and_prompt(image, mother_prompt))
+
+    stylist_result, mother_result = await asyncio.gather(stylist_task, mother_task)
+    return stylist_result, mother_result
+

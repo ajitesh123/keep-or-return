@@ -8,9 +8,12 @@ from PIL import Image
 import io
 import requests
 import os
+import dotenv
+from dotenv import find_dotenv, load_dotenv
 
-# Consider using environment variables or a configuration file for API keys.
-# WARNING: Do not hardcode API keys in your code, especially if sharing or using version control.
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
+
 openai.api_key = os.getenv('OPENAI_API_KEY')
 if openai.api_key is None:
     raise ValueError("Please set the OPENAI_API_KEY environment variable.")

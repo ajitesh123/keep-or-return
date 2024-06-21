@@ -25,7 +25,10 @@ def ask_openai_with_image(image):
     # Encode the uploaded image to base64
     base64_image = encode_image_to_base64(image)
     
-    # Create the payload with the base64 encoded image
+    # Create the new prompt for the fashion stylist and mother scenario
+    prompt = f"You are a fashion stylist and a mother. I've uploaded an image of a dress. Please analyze the dress based on factors like color theory, texture, and other relevant criteria, and provide a verdict on whether I should keep or return the dress. Justify your verdict with a detailed explanation."
+
+    # Create the payload with the base64 encoded image and the new prompt
     payload = {
         "model": "gpt-4-vision-preview",
         "messages": [
@@ -34,7 +37,7 @@ def ask_openai_with_image(image):
                 "content": [
                     {
                         "type": "text",
-                        "text": "I've uploaded an image and I'd like to know what it depicts and any interesting details you can provide."
+                        "text": prompt
                     },
                     {
                         "type": "image_url",
@@ -79,4 +82,16 @@ iface = gr.Interface(
 )
 
 # Launch the app
-iface.launch()
+iface.launch()def handle_image_upload(request):
+    # Get the uploaded image from the request
+    uploaded_image = request.files['image']
+
+    # Call the ask_openai_with_image function with the uploaded image
+    response = ask_openai_with_image(uploaded_image)
+
+    # Return the response as JSON
+    return jsonify({'response': response})
+
+@app.route('/upload-image', methods=['POST'])
+def upload_image():
+    return handle_image_upload(request)

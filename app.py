@@ -1,5 +1,5 @@
 # Import the necessary libraries
-import gradio as gr
+import streamlit as st
 import openai
 import base64
 from PIL import Image
@@ -14,17 +14,17 @@ if openai.api_key is None:
     raise ValueError("Please set the OPENAI_API_KEY environment variable.")
 
 # Function to encode the image to base64
-def encode_image_to_base64(image):
+def encode_image_to_base64(input_image):
     buffered = io.BytesIO()
-    image.save(buffered, format="JPEG")
+    input_image.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
     return img_str
 
 # Function to send the image to the OpenAI API and get a response
-def ask_openai_with_image(image):
+def ask_openai_with_image(image, selected_role):
     # Encode the uploaded image to base64
     base64_image = encode_image_to_base64(image)
-    
+
     # Create the payload with the base64 encoded image
     payload = {
         "model": "gpt-4-vision-preview",
@@ -34,7 +34,7 @@ def ask_openai_with_image(image):
                 "content": [
                     {
                         "type": "text",
-                        "text": "I've uploaded an image and I'd like to know what it depicts and any interesting details you can provide."
+                        "text": f"You are a {selected_role.lower()}. I've uploaded an image of a clothing item. Please provide your advice on whether I should keep or return this item, along with a justification for your decision. If you are a fashion stylist, consider factors like color theory and texture in your response."
                     },
                     {
                         "type": "image_url",
@@ -69,14 +69,12 @@ def ask_openai_with_image(image):
         # If an error occurred, return the error message
         return f"Error: {response.text}"
 
-# Create a Gradio interface
-iface = gr.Interface(
-    fn=ask_openai_with_image,
-    inputs=gr.Image(type="pil"),
-    outputs="text",
-    title="GPT-4 with Vision",
-    description="Upload an image and get a description from GPT-4 with Vision."
-)
+st.title("GPT-4 Fashion Advisor")
+st.write("Upload an image and get fashion advice from GPT-4.")
+uploaded_image = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
+role = st.radio("Select a role", ("Fashion Stylist", "Mother"))
 
-# Launch the app
-iface.launch()
+if uploaded_image is not None:
+    image = Image.open(uploaded_image)
+    response = ask_openai_with_image(image, role)
+    st.write(response)

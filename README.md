@@ -12,7 +12,7 @@ license: mit
 
 # OpenAI GPT-4 With Vision
 
-This repository contains a simple image captioning app that utilizes OpenAI's GPT-4 with the Vision extension. Users can upload images through a Gradio interface, and the app leverages GPT-4 to generate a description of the image content.
+This repository contains an image analysis app that utilizes OpenAI's GPT-4 with the Vision extension. Users can upload images through a Streamlit interface, and the app leverages GPT-4 to provide recommendations on whether to keep or return the item, acting as either a fashion stylist or a mother. The fashion stylist considers factors such as color theory, texture, and overall style, while the mother considers practicality, appropriateness, and overall value. Both roles provide a justification for their recommendation.
 
 ## How to Contribute
 

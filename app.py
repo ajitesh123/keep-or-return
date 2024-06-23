@@ -1,5 +1,5 @@
 # Import the necessary libraries
-import gradio as gr
+import streamlit as st
 import openai
 import base64
 from PIL import Image
@@ -21,10 +21,10 @@ def encode_image_to_base64(image):
     return img_str
 
 # Function to send the image to the OpenAI API and get a response
-def ask_openai_with_image(image):
+def ask_openai_with_image(image, role):
     # Encode the uploaded image to base64
     base64_image = encode_image_to_base64(image)
-    
+
     # Create the payload with the base64 encoded image
     payload = {
         "model": "gpt-4-vision-preview",
@@ -34,7 +34,7 @@ def ask_openai_with_image(image):
                 "content": [
                     {
                         "type": "text",
-                        "text": "I've uploaded an image and I'd like to know what it depicts and any interesting details you can provide."
+                        "text": ""
                     },
                     {
                         "type": "image_url",
@@ -45,6 +45,13 @@ def ask_openai_with_image(image):
         ],
         "max_tokens": 4095
     }
+
+    if role == "fashion_stylist":
+        payload["messages"][0]["content"][0]["text"] = "As a fashion stylist, analyze the uploaded image and provide a recommendation on whether to keep or return the item, considering factors such as color theory, texture, and overall style. Provide a justification for your recommendation."
+    elif role == "mother":
+        payload["messages"][0]["content"][0]["text"] = "As a mother, analyze the uploaded image and provide a recommendation on whether to keep or return the item, considering factors such as practicality, appropriateness, and overall value. Provide a justification for your recommendation."
+    else:
+        payload["messages"][0]["content"][0]["text"] = "I've uploaded an image and I'd like to know what it depicts and any interesting details you can provide."
     
     # Send the request to the OpenAI API
     response = requests.post(
@@ -69,14 +76,18 @@ def ask_openai_with_image(image):
         # If an error occurred, return the error message
         return f"Error: {response.text}"
 
-# Create a Gradio interface
-iface = gr.Interface(
-    fn=ask_openai_with_image,
-    inputs=gr.Image(type="pil"),
-    outputs="text",
-    title="GPT-4 with Vision",
-    description="Upload an image and get a description from GPT-4 with Vision."
-)
+# Create a Streamlit interface
+st.title("GPT-4 with Vision")
+st.write("Upload an image and get a description from GPT-4 with Vision.")
 
-# Launch the app
-iface.launch()
+role = st.radio("Select a role", ("Fashion Stylist", "Mother"))
+
+uploaded_image = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
+
+if uploaded_image is not None:
+    image = Image.open(uploaded_image)
+    if role == "Fashion Stylist":
+        response = ask_openai_with_image(image, "fashion_stylist")
+    else:
+        response = ask_openai_with_image(image, "mother")
+    st.write(response)

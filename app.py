@@ -1,6 +1,5 @@
-# Import the necessary libraries
 import streamlit as st
-import asyncio
+import threading
 from typing import Tuple
 import openai
 import base64
@@ -60,27 +59,61 @@ def ask_openai_with_image_and_prompt(image: Image, prompt: str) -> str:
         # If an error occurred, return the error message
         return f"Error: {response.text}"
 
-# Create a Gradio interface
-def main():
-    st.title("Outfit Rating App")
-    uploaded_image = st.file_uploader("Upload an image of your outfit", type=["png", "jpg", "jpeg"])
+def make_dual_ai_calls(image: Image) -> Tuple[str, str]:
+    stylist_prompt = f"""
+    Act as a fashion stylist and rate this outfit based on fashion theory, material, texture etc.
 
-# Launch the app
+    Output in markdown format.
+    """
+    
+    mother_prompt = f"""Act as my mother and give your verdict on this outfit, considering emotions.
+
+    Output in markdown format.
+    """
+
+    stylist_result = None
+    mother_result = None
+
+    def stylist_thread(image_copy):
+        nonlocal stylist_result
+        try:
+            stylist_result = ask_openai_with_image_and_prompt(image_copy, stylist_prompt)
+        except Exception as e:
+            stylist_result = f"Error in stylist thread: {str(e)}"
+
+    def mother_thread(image_copy):
+        nonlocal mother_result
+        try:
+            mother_result = ask_openai_with_image_and_prompt(image_copy, mother_prompt)
+        except Exception as e:
+            mother_result = f"Error in mother thread: {str(e)}"
+
+    image_copy = image.copy()  # Create a copy of the image to avoid thread safety issues
+
+    t1 = threading.Thread(target=stylist_thread, args=(image_copy,))
+    t2 = threading.Thread(target=mother_thread, args=(image_copy,))
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
+
+    return stylist_result, mother_result
+
+
+# Create a Streamlit interface
+def main():
+    st.sidebar.title("Outfit Rating App")
+    uploaded_image = st.sidebar.file_uploader("Upload an image of your outfit", type=["png", "jpg", "jpeg"])
+
     if uploaded_image is not None:
         image = Image.open(uploaded_image)
-        stylist_result, mother_result = asyncio.run(make_dual_ai_calls(image))
-        st.write("Fashion Stylist's Verdict:", stylist_result)
-        st.write("Mother's Verdict:", mother_result)
+        stylist_result, mother_result = make_dual_ai_calls(image)
+        st.markdown("# Fashion Stylist's Verdict")
+        st.markdown(stylist_result)
+        st.markdown("# Mother's Verdict")
+        st.markdown(mother_result)
 
 if __name__ == "__main__":
     main()
-async def make_dual_ai_calls(image: Image) -> Tuple[str, str]:
-    stylist_prompt = "Act as a fashion stylist and rate this outfit based on color theory, material, texture etc."
-    mother_prompt = "Act as my mother and give your verdict on this outfit, considering emotions."
-
-    stylist_task = asyncio.create_task(ask_openai_with_image_and_prompt(image, stylist_prompt))
-    mother_task = asyncio.create_task(ask_openai_with_image_and_prompt(image, mother_prompt))
-
-    stylist_result, mother_result = await asyncio.gather(stylist_task, mother_task)
-    return stylist_result, mother_result
-

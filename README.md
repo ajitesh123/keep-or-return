@@ -1,20 +1,46 @@
-# OpenAI GPT-4 With Vision 🔥
+# Fashion Outfit Caption Generator
 
-This repository contains a simple outfit rating app that utilizes OpenAI's GPT-4 with the Vision extension. Users can upload images through a Streamlit interface, and the app leverages GPT-4 to generate both a fashion stylist's and a mother's verdict on the outfit.
+This Streamlit app uses OpenAI's GPT-4 Vision API to generate captions and hashtags for fashion outfit images.
 
 ## Features
-- **Upload Images**: Users can upload images of their outfits.
-- **Dual Verdicts**: The app provides feedback from both a fashion stylist and a mother's perspective.
-- **Markdown Output**: Results are displayed in a clear and formatted markdown style.
 
-## How to Contribute
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+- Upload fashion outfit images
+- Generate catchy captions and relevant hashtags
+- User-friendly Streamlit interface
+- Error handling and input validation
+- Performance optimization with caching
 
-1. **Fork the Project**
-2. **Create your Feature Branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit your Changes** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push to the Branch** (`git push origin feature/AmazingFeature`)
-5. **Open a Pull Request**
+## Installation
+
+1. Clone this repository
+2. Install the required packages:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Set up your OpenAI API key as an environment variable:
+   ```
+   export OPENAI_API_KEY=your_api_key_here
+   ```
+
+## Usage
+
+1. Run the Streamlit app:
+   ```
+   streamlit run app.py
+   ```
+2. Open the provided URL in your web browser
+3. Upload a fashion outfit image
+4. Click "Generate Caption and Hashtags"
+5. View the generated caption and hashtags
+
+## Debug Mode
+
+Enable debug mode in the sidebar to view detailed logs and performance information.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
-Distributed under the MIT License. See LICENSE for more information.
+
+This project is licensed under the MIT License.

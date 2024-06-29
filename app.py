@@ -1,24 +1,25 @@
-import streamlit as st
-import threading
-from typing import Tuple
-import openai
-import base64
-from PIL import Image
-import io
-import requests
 import os
-import dotenv
+import io
+import base64
+import threading
+import requests
+from typing import Tuple
+from PIL import Image
+import streamlit as st
 from dotenv import find_dotenv, load_dotenv
+import openai
 
+# Load environment variables
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
 
+# Set OpenAI API key
 openai.api_key = os.getenv('OPENAI_API_KEY')
 if openai.api_key is None:
     raise ValueError("Please set the OPENAI_API_KEY environment variable.")
 
 # Function to encode the image to base64
-def encode_image_to_base64(image):
+def encode_image_to_base64(image: Image) -> str:
     buffered = io.BytesIO()
     # Convert RGBA to RGB if the image has an alpha channel
     if image.mode == 'RGBA':
@@ -36,15 +37,15 @@ def ask_openai_with_image_and_prompt(image: Image, prompt: str) -> str:
     payload = {
         "model": "gpt-4-vision-preview",
         "messages": [
-                {
+            {
                 "role": "system", 
                 "content": [{"type": "text", "text": prompt}]
-                },
-                {
+            },
+            {
                 "role": "user", 
                 "content": [{"type": "text", "text": "Here my outfit image"}, {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"}]
-                }
-                ],
+            }
+        ],
         "max_tokens": 4095
     }
     
@@ -71,15 +72,21 @@ def ask_openai_with_image_and_prompt(image: Image, prompt: str) -> str:
         # If an error occurred, return the error message
         return f"Error: {response.text}"
 
-def make_dual_ai_calls(image: Image, generate_caption: bool) -> Tuple[str, str, str]:
-    stylist_prompt = f"""
-    Act as a fashion stylist and rate this outfit based on fashion theory, material, texture etc.
+def generate_instagram_caption(image: Image) -> str:
+    caption_prompt = """
+    Generate an Instagram-style caption and hashtags for this outfit image.
+    The caption should be engaging and trendy, followed by relevant hashtags.
+    """
+    return ask_openai_with_image_and_prompt(image, caption_prompt)
 
+def make_dual_ai_calls(image: Image, generate_caption: bool) -> Tuple[str, str, str]:
+    stylist_prompt = """
+    Act as a fashion stylist and rate this outfit based on fashion theory, material, texture etc.
     Output in markdown format.
     """
     
-    mother_prompt = f"""Act as my mother and give your verdict on this outfit, considering emotions.
-
+    mother_prompt = """
+    Act as my mother and give your verdict on this outfit, considering emotions.
     Output in markdown format.
     """
 
@@ -126,15 +133,6 @@ def make_dual_ai_calls(image: Image, generate_caption: bool) -> Tuple[str, str, 
     t3.join()
 
     return stylist_result, mother_result, instagram_caption
-
-def generate_instagram_caption(image: Image) -> str:
-    caption_prompt = """
-    Generate an Instagram-style caption and hashtags for this outfit image.
-    The caption should be engaging and trendy, followed by relevant hashtags.
-
-    """
-    return ask_openai_with_image_and_prompt(image, caption_prompt)
-    
 
 # Create a Streamlit interface
 def main():

@@ -1,8 +1,6 @@
 import streamlit as st
 import threading
 from typing import Tuple
-import threading
-from typing import Tuple
 import openai
 import base64
 from PIL import Image
@@ -90,6 +88,16 @@ def make_dual_ai_calls(image: Image, generate_caption: bool) -> Tuple[str, str, 
             mother_result = ask_openai_with_image_and_prompt(image_copy, mother_prompt)
         except Exception as e:
             mother_result = f"Error in mother thread: {str(e)}"
+    
+    def instagram_caption_thread(image_copy):
+        nonlocal instagram_caption
+        try:
+            if generate_caption:
+                instagram_caption = generate_instagram_caption(image_copy)
+            else:
+                instagram_caption = ""
+        except Exception as e:
+            instagram_caption = f"Error in Instagram caption generation: {str(e)}"
 
     image_copy = image.copy()  # Create a copy of the image to avoid thread safety issues
 
@@ -107,6 +115,14 @@ def make_dual_ai_calls(image: Image, generate_caption: bool) -> Tuple[str, str, 
 
     return stylist_result, mother_result, instagram_caption
 
+def generate_instagram_caption(image: Image) -> str:
+    caption_prompt = """
+    Generate an Instagram-style caption and hashtags for this outfit image.
+    The caption should be engaging and trendy, followed by relevant hashtags.
+
+    """
+    return ask_openai_with_image_and_prompt(image, caption_prompt)
+    
 
 # Create a Streamlit interface
 def main():
@@ -116,6 +132,7 @@ def main():
 
     if uploaded_image is not None:
         image = Image.open(uploaded_image)
+        st.sidebar.image(image, caption="Uploaded Outfit Image", use_column_width=True, width=200)
         with st.spinner("Generating results..."):
             stylist_result, mother_result, instagram_caption = make_dual_ai_calls(image, generate_caption)
         st.markdown("# Fashion Stylist's Verdict")
@@ -131,22 +148,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-def generate_instagram_caption(image: Image) -> str:
-    caption_prompt = """
-    Generate an Instagram-style caption and hashtags for this outfit image.
-    The caption should be engaging and trendy, followed by relevant hashtags.
-
-    Output in markdown format.
-    """
-    return ask_openai_with_image_and_prompt(image, caption_prompt)
-    def instagram_caption_thread(image_copy):
-        nonlocal instagram_caption
-        try:
-            if generate_caption:
-                instagram_caption = generate_instagram_caption(image_copy)
-            else:
-                instagram_caption = ""
-        except Exception as e:
-            instagram_caption = f"Error in Instagram caption generation: {str(e)}"
-

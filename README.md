@@ -1,4 +1,4 @@
-# OpenAI GPT-4 With Vision 🔥
+# World's first AI Stylist 🔥
 
 This repository contains a simple outfit rating app that utilizes OpenAI's GPT-4 with the Vision extension. Users can upload images through a Streamlit interface, and the app leverages GPT-4 to generate both a fashion stylist's and a mother's verdict on the outfit.
 

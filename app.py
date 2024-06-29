@@ -20,6 +20,9 @@ if openai.api_key is None:
 # Function to encode the image to base64
 def encode_image_to_base64(image):
     buffered = io.BytesIO()
+    # Convert RGBA to RGB if the image has an alpha channel
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
     image.save(buffered, format="JPEG")
     img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
     return img_str
@@ -32,7 +35,16 @@ def ask_openai_with_image_and_prompt(image: Image, prompt: str) -> str:
     # Create the payload with the base64 encoded image
     payload = {
         "model": "gpt-4-vision-preview",
-        "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"}]}],
+        "messages": [
+                {
+                "role": "system", 
+                "content": [{"type": "text", "text": prompt}]
+                },
+                {
+                "role": "user", 
+                "content": [{"type": "text", "text": "Here my outfit image"}, {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"}]
+                }
+                ],
         "max_tokens": 4095
     }
     

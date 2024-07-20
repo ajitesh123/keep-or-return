@@ -7,6 +7,7 @@ This repository contains a simple outfit rating app that utilizes OpenAI's GPT-4
 - **Dual Verdicts**: The app provides feedback from both a fashion stylist and a mother's perspective.
 - **Markdown Output**: Results are displayed in a clear and formatted markdown style.
 
+
 ## How to Contribute
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
 
